@@ -4,13 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useDebounce } from "./hooks/useDebounce";
-import { searchGames } from "./services/api";
+import { getRecommendations, searchGames } from "./services/api";
 import { Card, CardFooter, CardTitle } from "./components/ui/card";
+import { cn } from "@/lib/utils";
 
 type Game = {
   id: number;
   name: string;
   background_image: string;
+  genres: { slug: string; name: string }[];
+  tags: { slug: string; name: string }[];
 };
 
 function App() {
@@ -20,6 +23,9 @@ function App() {
   const debouncedQuery = useDebounce(searchQuery, 500);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<Game[]>([]);
+  const [isRecsLoading, setIsRecsLoading] = useState(false);
+  const [recsError, setRecsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAndSetGames = async () => {
@@ -55,6 +61,44 @@ function App() {
 
   const handleRemoveGame = (gameId: number) => {
     setSelectedGames((prev) => prev.filter((game) => game.id !== gameId));
+  };
+
+  const handleGetRecommendations = async () => {
+    if (selectedGames.length === 0) return;
+
+    setIsRecsLoading(true);
+    setRecsError(null);
+    setRecommendations([]);
+
+    try {
+      const genreSlugs = new Set<string>();
+      const tagSlugs = new Set<string>();
+
+      selectedGames.forEach((game) => {
+        game.genres.forEach((genre) => genreSlugs.add(genre.slug));
+        game.tags.slice(0, 3).forEach((tag) => tagSlugs.add(tag.slug));
+      });
+
+      if (genreSlugs.size === 0 && tagSlugs.size === 0) {
+        throw new Error("No genres or tags found to base recommendations on.");
+      }
+
+      const recs = await getRecommendations(
+        Array.from(genreSlugs).join(","),
+        Array.from(tagSlugs).join(",")
+      );
+
+      const finalRecs = recs.filter(
+        (rec) => !selectedGames.some((selected) => selected.id === rec.id)
+      );
+
+      setRecommendations(finalRecs);
+    } catch (err) {
+      console.error(err);
+      setRecsError("Could not fetch recommendations. Please try again.");
+    } finally {
+      setIsRecsLoading(false);
+    }
   };
 
   return (
@@ -162,14 +206,24 @@ function App() {
               </Card>
             ))}
           </div>
-
-          {selectedGames.length > 0 && (
-            <div className="flex justify-center mx-auto mt-10 mb-10">
-              <Button className="bg-blue-500 text-white hover:bg-blue-600 px-6 py-3 text-lg font-inter font-bold rounded-md shadow-[0_0_5px_theme(colors.blue.500),0_0_10px_theme(colors.blue.500)] h-full">
-                Get Recommendations
-              </Button>
-            </div>
-          )}
+          <div className="flex justify-center mx-auto mt-10 mb-10">
+            <Button
+              disabled={selectedGames.length === 0}
+              className={cn(
+                "px-6 py-3 text-lg font-inter font-bold rounded-md h-full transition-all duration-300",
+                {
+                  // Styles for the ENABLED state (neon effect)
+                  "bg-blue-500 text-white hover:bg-blue-600 shadow-[0_0_5px_theme(colors.blue.500),0_0_10px_theme(colors.blue.500)]":
+                    selectedGames.length > 0,
+                  // Styles for the DISABLED state (dimmed)
+                  "bg-gray-700 text-gray-400 cursor-not-allowed opacity-60":
+                    selectedGames.length === 0,
+                }
+              )}
+            >
+              Get Recommendations
+            </Button>
+          </div>
         </div>
       </div>
     </>

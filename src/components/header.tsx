@@ -10,7 +10,7 @@ const navLinks = [
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#111121]">
+    <header className="top-0 z-50 w-full bg-[#111121]">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
         {/* Site Title */}
         <h1 className="text-white text-xl md:text-2xl font-bold">
