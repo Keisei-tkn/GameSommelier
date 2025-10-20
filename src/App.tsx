@@ -1,4 +1,4 @@
-import Header from "@/components/header";
+import Header from "@/components/Header";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,13 +27,10 @@ function App() {
         setSearchResults([]);
         return;
       }
-
       setIsLoading(true);
       setError(null);
-
       try {
         const data = await searchGames(debouncedQuery);
-
         const availableGames = data.filter(
           (game) => !selectedGames.some((selected) => selected.id === game.id)
         );
@@ -46,7 +43,6 @@ function App() {
         setIsLoading(false);
       }
     };
-
     fetchAndSetGames();
   }, [debouncedQuery, selectedGames]);
 
@@ -63,19 +59,18 @@ function App() {
 
   return (
     <>
-      <div>
-        <Header />
-      </div>
-      <div className="h-screen w-full flex flex-col mx-auto px-4 py-6 bg-[#111121]">
+      <Header />
+      <div className="min-h-screen w-full flex flex-col mx-auto px-4 py-6 bg-[#111121]">
         <div className="mx-auto my-6 justify-center text-center">
-          <h1 className="text-white text-3xl font-inter font-bold">
+          <h1 className="text-white text-2xl md:text-3xl font-inter font-bold">
             Select Your Favorite Games
           </h1>
-          <p className="text-white text-lg font-inter">
+          <p className="text-white text-base md:text-lg font-inter">
             Choose up to 5 games to get new recommendations.
           </p>
         </div>
-        <div className="w-2/3 mx-auto">
+
+        <div className="w-full max-w-2xl mx-auto">
           <div className="relative">
             <Input
               type="search"
@@ -87,15 +82,15 @@ function App() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               disabled={selectedGames.length >= 5}
-              className="w-full py-8 font-inter !text-2xl text-white placeholder:text-2xl bg-gray-900 border-0 shadow-lg focus:ring-2 focus:ring-blue-400"
+              className="w-full py-4 md:py-6 !text-lg md:!text-2xl font-inter text-white placeholder:text-lg md:placeholder:text-2xl bg-gray-900 border-0 shadow-lg focus:ring-2 focus:ring-blue-400"
             />
             {isLoading && (
-              <div className="mt-2 w-full p-4 text-center bg-card border rounded-md">
+              <div className="absolute top-full mt-2 w-full p-4 text-center bg-card border rounded-md">
                 <p className="text-muted-foreground">Searching...</p>
               </div>
             )}
             {error && (
-              <div className="mt-2 w-full p-4 text-center bg-destructive border border-destructive-foreground rounded-md">
+              <div className="absolute top-full mt-2 w-full p-4 text-center bg-destructive border border-destructive-foreground rounded-md">
                 <p className="text-destructive-foreground">{error}</p>
               </div>
             )}
@@ -103,7 +98,7 @@ function App() {
               !error &&
               searchResults.length > 0 &&
               selectedGames.length < 5 && (
-                <div className="absolute top-full mt-2 w-full border border-gray rounded-md shadow-lg z-10 bg-gray-900">
+                <div className="absolute top-full mt-2 w-full border border-gray-700 rounded-md shadow-lg z-10 bg-gray-900">
                   <ul>
                     {searchResults.map((game) => (
                       <li
@@ -111,7 +106,15 @@ function App() {
                         onClick={() => handleSelectGame(game)}
                         className="px-4 py-3 hover:bg-accent hover:text-blue-400 cursor-pointer rounded-md bg-gray-900 text-white"
                       >
-                        {game.name}
+                        <div className="flex items-center gap-4">
+                          <div
+                            style={{
+                              backgroundImage: `url(${game.background_image})`,
+                            }}
+                            className="w-10 h-10 rounded-md bg-cover bg-center flex-shrink-0"
+                          ></div>
+                          <span className="truncate">{game.name}</span>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -119,59 +122,54 @@ function App() {
               )}
           </div>
         </div>
-        <div>
-          <div>
-            <div className="w-3/4 flex-row justify-between flex mx-auto align-center ">
-              <div>
-                <h2 className="text-white text-2xl font-inter font-bold mt-10 mb-4 text-left">
-                  Selected Games ({selectedGames.length}/5)
-                </h2>
-              </div>
-              <div>
-                <h2
-                  className="text-white text-md font-inter mt-12 mb-4 text-right hover:text-blue-400 cursor-pointer"
-                  onClick={() => setSelectedGames([])}
-                >
-                  Clear all selections.
-                </h2>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div className=" w-3/4 flex flex-wrap items-center justify-center mt-6 gap-6 mx-auto">
-              {selectedGames.map((game) => (
-                <Card
-                  className="w-60 h-60 relative overflow-hidden bg-cover bg-center border-0 shadow-lg "
-                  style={{ backgroundImage: `url(${game.background_image})` }}
-                >
-                  <div className="absolute inset-0 h-full w-full flex flex-col justify-end bg-gradient-to-t from-black via-transparent to-transparent">
-                    <CardTitle>
-                      <Badge
-                        variant="destructive"
-                        className="absolute top-2 right-2 cursor-pointer font-inter"
-                        onClick={() => handleRemoveGame(game.id)}
-                      >
-                        Remove
-                      </Badge>
-                    </CardTitle>
 
-                    <CardFooter className="p-4">
-                      <h3 className="text-white text-xl font-bold">
-                        {game.name}
-                      </h3>
-                    </CardFooter>
-                  </div>
-                </Card>
-              ))}
-            </div>
+        <div className="w-full max-w-5xl mx-auto mt-10">
+          <div className="flex flex-col sm:flex-row justify-between items-baseline mb-4">
+            <h2 className="text-white text-2xl font-inter font-bold text-left">
+              Selected Games ({selectedGames.length}/5)
+            </h2>
+            <h2
+              className="text-blue-500 text-sm font-inter hover:text-blue-400 cursor-pointer mt-2 sm:mt-0"
+              onClick={() => setSelectedGames([])}
+            >
+              Clear all selections
+            </h2>
           </div>
-          <div>
-            <div className="w-3/4 flex justify-center mx-auto mt-10 mb-10">
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {selectedGames.map((game) => (
+              <Card
+                key={game.id}
+                className="w-full aspect-square relative overflow-hidden bg-cover bg-center border-0 shadow-lg"
+                style={{ backgroundImage: `url(${game.background_image})` }}
+              >
+                <div className="absolute inset-0 h-full w-full flex flex-col justify-end bg-gradient-to-t from-black via-transparent to-transparent">
+                  <CardTitle>
+                    <Badge
+                      variant="destructive"
+                      className="absolute top-2 right-2 cursor-pointer font-inter"
+                      onClick={() => handleRemoveGame(game.id)}
+                    >
+                      Remove
+                    </Badge>
+                  </CardTitle>
+                  <CardFooter className="p-2 md:p-4">
+                    <h3 className="text-white text-sm md:text-xl font-bold">
+                      {game.name}
+                    </h3>
+                  </CardFooter>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {selectedGames.length > 0 && (
+            <div className="flex justify-center mx-auto mt-10 mb-10">
               <Button className="bg-blue-500 text-white hover:bg-blue-600 px-6 py-3 text-lg font-inter font-bold rounded-md shadow-[0_0_5px_theme(colors.blue.500),0_0_10px_theme(colors.blue.500)] h-full">
                 Get Recommendations
               </Button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>
