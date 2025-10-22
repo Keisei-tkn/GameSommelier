@@ -2,7 +2,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 
-// Best practice: Define navigation links in an array for easy maintenance.
 const navLinks = [
   { title: "Home", href: "/" },
   { title: "About", href: "/about" },
@@ -12,12 +11,9 @@ export default function Header() {
   return (
     <header className="top-0 z-50 w-full bg-[#111121]">
       <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        {/* Site Title */}
         <h1 className="text-white text-xl md:text-2xl font-bold">
           Game Sommelier
         </h1>
-
-        {/* Desktop Navigation (Visible on medium screens and up) */}
         <nav className="hidden md:flex">
           <ul className="flex items-center space-x-6">
             {navLinks.map((link) => (
@@ -33,7 +29,6 @@ export default function Header() {
           </ul>
         </nav>
 
-        {/* Mobile Navigation (Visible on small screens) */}
         <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
@@ -48,7 +43,7 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="bg-[#111121] text-white border-l-gray-800"
+              className="bg-[#111121] text-white border-l-gray-800 px-4"
             >
               <div className="flex flex-col space-y-6 pt-8">
                 {navLinks.map((link) => (

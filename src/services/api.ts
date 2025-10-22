@@ -11,6 +11,8 @@ export type GameDetail = Game & {
   involved_companies: { company: { name: string } }[];
   platforms: { name: string }[];
   aggregated_rating: number;
+  videos: { video_id: string; name: string }[];
+  summary: string;
 };
 
 function formatImageUrl(imageId: string): string {
@@ -65,7 +67,7 @@ export const getRecommendations = async (
   if (genreIDs.length === 0) return [];
 
   const query = `
-    fields name, cover.image_id, involved_companies.company.name, platforms.name, aggregated_rating, genres.name, themes.name, keywords.name;
+    fields name, cover.image_id, involved_companies.company.name, platforms.name, aggregated_rating, genres.name, themes.name, keywords.name, videos.video_id, summary;
     where 
       genres = (${genreIDs.join(",")}) & 
       themes = (${themeIDs.join(",")}) & 
@@ -91,5 +93,7 @@ export const getRecommendations = async (
     aggregated_rating: game.aggregated_rating
       ? Math.round(game.aggregated_rating)
       : 0,
+    videos: game.videos || [],
+    summary: game.summary || "",
   }));
 };

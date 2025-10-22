@@ -4,25 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useDebounce } from "./hooks/useDebounce";
-import { getRecommendations, searchGames } from "./services/api";
+import {
+  getRecommendations,
+  searchGames,
+  type Game,
+  type GameDetail,
+} from "./services/api";
 import { Card, CardFooter, CardTitle } from "./components/ui/card";
 import { cn } from "@/lib/utils";
 import { PlatformIcons } from "@/components/PlatformIcons";
-
-export type Game = {
-  id: number;
-  name: string;
-  cover_url: string;
-  genres: { id: string; name: string }[];
-  themes: { id: string; name: string }[];
-  keywords: { id: number; name: string }[];
-};
-
-export type GameDetail = Game & {
-  involved_companies: { company: { name: string } }[];
-  platforms: { name: string }[];
-  aggregated_rating: number;
-};
+import { mapPlatformNameToSlug } from "@/utils/functions";
+import { GameDetailModal } from "@/components/GameDetail";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -33,29 +25,10 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<GameDetail[]>([]);
   const [isRecsLoading, setIsRecsLoading] = useState(false);
-  const [recsError, setRecsError] = useState<string | null>(null);
 
-  const mapPlatformNameToSlug = (name: string): string => {
-    const n = name.toLowerCase();
-    if (n.includes("playstation") || n.startsWith("ps")) return "playstation";
-    if (n.includes("xbox")) return "xbox";
-    if (
-      n.includes("nintendo") ||
-      n.includes("switch") ||
-      n.includes("wii") ||
-      n.includes("ds") ||
-      n.includes("3ds")
-    )
-      return "nintendo";
-    if (n.includes("pc") || n.includes("windows")) return "pc";
-    if (n.includes("mac")) return "mac";
-    if (n.includes("linux")) return "linux";
-    if (n.includes("android")) return "android";
-    if (n.includes("ios") || n.includes("iphone") || n.includes("ipad"))
-      return "ios";
-    if (n.includes("web") || n.includes("browser")) return "web";
-    return n.replace(/\s+/g, "-");
-  };
+  const [modalGameDetail, setModalGameDetail] = useState<GameDetail | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchAndSetGames = async () => {
@@ -104,7 +77,6 @@ function App() {
     if (selectedGames.length === 0) return;
 
     setIsRecsLoading(true);
-    setRecsError(null);
     setRecommendations([]);
 
     try {
@@ -165,10 +137,22 @@ function App() {
       setRecommendations(finalRecs);
     } catch (err) {
       console.error(err);
-      setRecsError("Could not fetch recommendations. Please try again.");
     } finally {
       setIsRecsLoading(false);
     }
+  };
+
+  const handleCardClick = (gameId: number) => {
+    const gameToShow = recommendations.find((game) => game.id === gameId);
+    if (gameToShow) {
+      setModalGameDetail(gameToShow);
+    } else {
+      console.error("Clicked game not found in recommendations list.");
+    }
+  };
+
+  const closeModal = () => {
+    setModalGameDetail(null);
   };
 
   return (
@@ -303,6 +287,7 @@ function App() {
               <Card
                 key={game.id}
                 className="w-full flex flex-col md:flex-row bg-gray-900 border-0 shadow-lg px-4"
+                onClick={() => handleCardClick(game.id)}
               >
                 <div
                   style={{
@@ -378,6 +363,11 @@ function App() {
               </Card>
             ))}
           </div>
+          <GameDetailModal
+            isOpen={!!modalGameDetail}
+            game={modalGameDetail}
+            onClose={closeModal}
+          />
         </div>
       </div>
     </>
