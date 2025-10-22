@@ -64,7 +64,7 @@ export const getRecommendations = async (
 ): Promise<GameDetail[]> => {
   if (genreIDs.length === 0) return [];
 
-  const randomOffset = Math.floor(Math.random() * 20);
+  const randomOffset = Math.floor(Math.random() * 25);
 
   const query = `
     fields name, cover.image_id, involved_companies.company.name, platforms.name, aggregated_rating, genres.name, themes.name, keywords.name;

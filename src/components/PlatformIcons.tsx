@@ -1,6 +1,12 @@
-import { Monitor, Apple, Globe } from "lucide-react";
-import { FaPlaystation, FaXbox, FaLinux, FaAndroid } from "react-icons/fa";
-import { SiNintendo } from "react-icons/si";
+import { Apple, Globe } from "lucide-react";
+import {
+  FaPlaystation,
+  FaXbox,
+  FaLinux,
+  FaAndroid,
+  FaWindows,
+} from "react-icons/fa";
+import { SiNintendoswitch } from "react-icons/si";
 
 // You might need to install react-icons: npm install react-icons
 interface PlatformIconsProps {
@@ -8,10 +14,10 @@ interface PlatformIconsProps {
 }
 
 const iconMap: { [key: string]: React.ElementType } = {
-  pc: Monitor,
+  pc: FaWindows,
   playstation: FaPlaystation,
   xbox: FaXbox,
-  nintendo: SiNintendo,
+  nintendo: SiNintendoswitch,
   mac: Apple,
   linux: FaLinux,
   android: FaAndroid,

@@ -7,6 +7,7 @@ import { useDebounce } from "./hooks/useDebounce";
 import { getRecommendations, searchGames } from "./services/api";
 import { Card, CardFooter, CardTitle } from "./components/ui/card";
 import { cn } from "@/lib/utils";
+import { PlatformIcons } from "@/components/PlatformIcons";
 
 export type Game = {
   id: number;
@@ -33,6 +34,28 @@ function App() {
   const [recommendations, setRecommendations] = useState<GameDetail[]>([]);
   const [isRecsLoading, setIsRecsLoading] = useState(false);
   const [recsError, setRecsError] = useState<string | null>(null);
+
+  const mapPlatformNameToSlug = (name: string): string => {
+    const n = name.toLowerCase();
+    if (n.includes("playstation") || n.startsWith("ps")) return "playstation";
+    if (n.includes("xbox")) return "xbox";
+    if (
+      n.includes("nintendo") ||
+      n.includes("switch") ||
+      n.includes("wii") ||
+      n.includes("ds") ||
+      n.includes("3ds")
+    )
+      return "nintendo";
+    if (n.includes("pc") || n.includes("windows")) return "pc";
+    if (n.includes("mac")) return "mac";
+    if (n.includes("linux")) return "linux";
+    if (n.includes("android")) return "android";
+    if (n.includes("ios") || n.includes("iphone") || n.includes("ipad"))
+      return "ios";
+    if (n.includes("web") || n.includes("browser")) return "web";
+    return n.replace(/\s+/g, "-");
+  };
 
   useEffect(() => {
     const fetchAndSetGames = async () => {
@@ -283,14 +306,14 @@ function App() {
                   style={{
                     backgroundImage: `url(${game.cover_url})`,
                   }}
-                  className="w-full md:w-48 h-64 rounded-md bg-contain bg-center bg-no-repeat"
+                  className="w-full aspect-[3/4] md:w-48 md:h-64 rounded-md bg-cover bg-center bg-no-repeat my-auto"
                 ></div>
-                <div className="flex-grow p-4">
+                <div className="flex-grow px-4">
                   <h2 className="text-white text-2xl font-bold">{game.name}</h2>
-                  <div className="flex">
+                  <div className="flex-rows-2 mt-2">
                     <div>
                       <h3 className="text-white text-lg font-semibold mt-2">
-                        Genres:
+                        Genres
                       </h3>
                       <div className="flex flex-wrap gap-2 mt-1">
                         {game.genres.map((genre) => (
@@ -303,9 +326,51 @@ function App() {
                         ))}
                       </div>
                     </div>
-                    <div></div>
-                    <div></div>
-                    <div></div>``
+                    <div>
+                      <h3 className="text-white text-lg font-semibold mt-2">
+                        Themes
+                      </h3>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {game.themes.map((theme) => (
+                          <Badge
+                            key={theme.id}
+                            className="bg-gray-800 text-gray-400"
+                          >
+                            {theme.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-white text-lg font-semibold mt-2">
+                        Developers
+                      </h3>
+                      <p className="text-gray-400">
+                        {game.involved_companies
+                          .slice(0, 3)
+                          .map((company) => company.company.name)
+                          .join(", ") || "Unknown"}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-white text-lg font-semibold mt-2">
+                        Platforms
+                      </h3>
+                      {game.platforms && game.platforms.length > 0 ? (
+                        <div className="mt-1">
+                          <PlatformIcons
+                            platforms={game.platforms.map((p) => ({
+                              platform: {
+                                slug: mapPlatformNameToSlug(p.name),
+                                name: p.name,
+                              },
+                            }))}
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-gray-400">Unknown</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>
