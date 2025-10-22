@@ -270,10 +270,8 @@ function App() {
               className={cn(
                 "px-6 py-3 text-lg font-inter font-bold rounded-md h-full transition-all duration-300",
                 {
-                  // Styles for the ENABLED state (neon effect)
                   "bg-blue-500 text-white hover:bg-blue-600 shadow-[0_0_5px_theme(colors.blue.500),0_0_10px_theme(colors.blue.500)]":
                     selectedGames.length > 0,
-                  // Styles for the DISABLED state (dimmed)
                   "bg-gray-700 text-gray-400 cursor-not-allowed opacity-60":
                     selectedGames.length === 0,
                 }

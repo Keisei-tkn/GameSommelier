@@ -65,7 +65,6 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                 aria-label={game.name + " cover art"}
               ></div>
             </div>
-            {/* Contenedor de Texto */}
             <div className="flex-grow space-y-4">
               {game.summary && (
                 <div>

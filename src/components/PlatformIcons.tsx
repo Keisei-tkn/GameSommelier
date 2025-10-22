@@ -8,7 +8,6 @@ import {
 } from "react-icons/fa";
 import { SiNintendoswitch } from "react-icons/si";
 
-// You might need to install react-icons: npm install react-icons
 interface PlatformIconsProps {
   platforms: { platform: { slug: string; name: string } }[];
 }
@@ -26,7 +25,6 @@ const iconMap: { [key: string]: React.ElementType } = {
 };
 
 export const PlatformIcons: React.FC<PlatformIconsProps> = ({ platforms }) => {
-  // Get unique parent platform slugs to avoid duplicate icons (e.g. PS4 and PS5 -> Playstation icon)
   const parentSlugs = new Set(
     platforms.map((p) => p.platform.slug.split("-")[0])
   );
