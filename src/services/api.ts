@@ -64,8 +64,6 @@ export const getRecommendations = async (
 ): Promise<GameDetail[]> => {
   if (genreIDs.length === 0) return [];
 
-  const randomOffset = Math.floor(Math.random() * 25);
-
   const query = `
     fields name, cover.image_id, involved_companies.company.name, platforms.name, aggregated_rating, genres.name, themes.name, keywords.name;
     where 
@@ -76,7 +74,6 @@ export const getRecommendations = async (
       aggregated_rating_count > 5;
     sort aggregated_rating desc;
     limit 10;
-    offset ${randomOffset}; 
   `;
   console.log("Recommendation Query:", query);
 

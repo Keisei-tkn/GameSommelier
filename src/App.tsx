@@ -59,7 +59,7 @@ function App() {
 
   useEffect(() => {
     const fetchAndSetGames = async () => {
-      if (debouncedQuery.trim() === "") {
+      if (debouncedQuery.trim() === "" || searchQuery.trim() === "") {
         setSearchResults([]);
         return;
       }
@@ -84,13 +84,15 @@ function App() {
       }
     };
     fetchAndSetGames();
-  }, [debouncedQuery, selectedGames]);
+  }, [debouncedQuery, selectedGames, searchQuery]);
 
   const handleSelectGame = (game: Game) => {
     if (selectedGames.length < 5) {
-      setSelectedGames((prev) => [...prev, game]);
       setSearchQuery("");
       setSearchResults([]);
+      setSelectedGames((prev) => [...prev, game]);
+
+      setIsLoading(false);
     }
   };
 
