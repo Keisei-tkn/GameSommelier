@@ -8,12 +8,19 @@ import { getRecommendations, searchGames } from "./services/api";
 import { Card, CardFooter, CardTitle } from "./components/ui/card";
 import { cn } from "@/lib/utils";
 
-type Game = {
+export type Game = {
   id: number;
   name: string;
-  background_image: string;
-  genres: { slug: string; name: string }[];
-  tags: { slug: string; name: string }[];
+  cover_url: string;
+  genres: { id: string; name: string }[];
+  themes: { id: string; name: string }[];
+  keywords: { id: number; name: string }[];
+};
+
+export type GameDetail = Game & {
+  involved_companies: { company: { name: string } }[];
+  platforms: { name: string }[];
+  aggregated_rating: number;
 };
 
 function App() {
@@ -23,7 +30,7 @@ function App() {
   const debouncedQuery = useDebounce(searchQuery, 500);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [recommendations, setRecommendations] = useState<Game[]>([]);
+  const [recommendations, setRecommendations] = useState<GameDetail[]>([]);
   const [isRecsLoading, setIsRecsLoading] = useState(false);
   const [recsError, setRecsError] = useState<string | null>(null);
 
@@ -43,7 +50,11 @@ function App() {
         setSearchResults(availableGames);
       } catch (err) {
         console.error("Error fetching games:", err);
-        setError("Failed to fetch games. Please try again later.");
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred.");
+        }
         setSearchResults([]);
       } finally {
         setIsLoading(false);
@@ -56,6 +67,7 @@ function App() {
     if (selectedGames.length < 5) {
       setSelectedGames((prev) => [...prev, game]);
       setSearchQuery("");
+      setSearchResults([]);
     }
   };
 
@@ -71,21 +83,54 @@ function App() {
     setRecommendations([]);
 
     try {
-      const genreSlugs = new Set<string>();
-      const tagSlugs = new Set<string>();
+      const genreCounts = new Map<number, number>();
+      const themeCounts = new Map<number, number>();
+      const keywordCounts = new Map<number, number>();
 
       selectedGames.forEach((game) => {
-        game.genres.forEach((genre) => genreSlugs.add(genre.slug));
-        game.tags.slice(0, 3).forEach((tag) => tagSlugs.add(tag.slug));
+        game.genres.forEach((genre) => {
+          const count = genreCounts.get(Number(genre.id)) || 0;
+          genreCounts.set(Number(genre.id), count + 1);
+        });
+        game.themes.forEach((theme) => {
+          const count = themeCounts.get(Number(theme.id)) || 0;
+          themeCounts.set(Number(theme.id), count + 1);
+        });
+        game.keywords.forEach((keyword) => {
+          const count = keywordCounts.get(Number(keyword.id)) || 0;
+          keywordCounts.set(Number(keyword.id), count + 1);
+        });
       });
 
-      if (genreSlugs.size === 0 && tagSlugs.size === 0) {
-        throw new Error("No genres or tags found to base recommendations on.");
+      if (genreCounts.size === 0 || themeCounts.size === 0) {
+        throw new Error("No hay suficientes datos de género o tema.");
+      }
+
+      const dominantGenreId = [...genreCounts.entries()].reduce((a, b) =>
+        b[1] > a[1] ? b : a
+      )[0];
+
+      const dominantThemeId = [...themeCounts.entries()].reduce((a, b) =>
+        b[1] > a[1] ? b : a
+      )[0];
+
+      const sortedKeywords = [...keywordCounts.entries()].sort(
+        (a, b) => b[1] - a[1]
+      );
+      const topThreeKeywordIDs = sortedKeywords
+        .slice(0, 3)
+        .map((entry) => entry[0]);
+
+      if (topThreeKeywordIDs.length === 0) {
+        console.warn(
+          "No se encontraron keywords comunes. Las recomendaciones se basarán solo en género y tema."
+        );
       }
 
       const recs = await getRecommendations(
-        Array.from(genreSlugs).join(","),
-        Array.from(tagSlugs).join(",")
+        [dominantGenreId],
+        [dominantThemeId],
+        topThreeKeywordIDs
       );
 
       const finalRecs = recs.filter(
@@ -153,9 +198,9 @@ function App() {
                         <div className="flex items-center gap-4">
                           <div
                             style={{
-                              backgroundImage: `url(${game.background_image})`,
+                              backgroundImage: `url(${game.cover_url})`,
                             }}
-                            className="w-10 h-10 rounded-md bg-cover bg-center flex-shrink-0"
+                            className="w-10 h-15 rounded-md bg-cover bg-center flex-shrink-0"
                           ></div>
                           <span className="truncate">{game.name}</span>
                         </div>
@@ -174,7 +219,10 @@ function App() {
             </h2>
             <h2
               className="text-blue-500 text-sm font-inter hover:text-blue-400 cursor-pointer mt-2 sm:mt-0"
-              onClick={() => setSelectedGames([])}
+              onClick={() => {
+                setSelectedGames([]);
+                setRecommendations([]);
+              }}
             >
               Clear all selections
             </h2>
@@ -185,7 +233,7 @@ function App() {
               <Card
                 key={game.id}
                 className="w-full aspect-square relative overflow-hidden bg-cover bg-center border-0 shadow-lg"
-                style={{ backgroundImage: `url(${game.background_image})` }}
+                style={{ backgroundImage: `url(${game.cover_url})` }}
               >
                 <div className="absolute inset-0 h-full w-full flex flex-col justify-end bg-gradient-to-t from-black via-transparent to-transparent">
                   <CardTitle>
@@ -208,7 +256,8 @@ function App() {
           </div>
           <div className="flex justify-center mx-auto mt-10 mb-10">
             <Button
-              disabled={selectedGames.length === 0}
+              onClick={handleGetRecommendations}
+              disabled={selectedGames.length === 0 || isRecsLoading}
               className={cn(
                 "px-6 py-3 text-lg font-inter font-bold rounded-md h-full transition-all duration-300",
                 {
@@ -223,6 +272,44 @@ function App() {
             >
               Get Recommendations
             </Button>
+          </div>
+          <div className="grid grid-cols-1 max-width-sm gap-6">
+            {recommendations.map((game) => (
+              <Card
+                key={game.id}
+                className="w-full flex flex-col md:flex-row bg-gray-900 border-0 shadow-lg px-4"
+              >
+                <div
+                  style={{
+                    backgroundImage: `url(${game.cover_url})`,
+                  }}
+                  className="w-full md:w-48 h-64 rounded-md bg-contain bg-center bg-no-repeat"
+                ></div>
+                <div className="flex-grow p-4">
+                  <h2 className="text-white text-2xl font-bold">{game.name}</h2>
+                  <div className="flex">
+                    <div>
+                      <h3 className="text-white text-lg font-semibold mt-2">
+                        Genres:
+                      </h3>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {game.genres.map((genre) => (
+                          <Badge
+                            key={genre.id}
+                            className="bg-gray-800 text-gray-400"
+                          >
+                            {genre.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div></div>
+                    <div></div>
+                    <div></div>``
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
